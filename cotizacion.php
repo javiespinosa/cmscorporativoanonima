@@ -1,294 +1,219 @@
 <?php
-
 session_start();
 
 include 'includes/web_header.php';
 include 'includes/web_menu.php';
+require_once 'config/database_sativa.php';
 
-$carrito = $_SESSION['cotizacion'] ?? [];
-
-$productosCotizacion = [];
-
-if(!empty($carrito))
-{
-    $ids = implode(',', array_keys($carrito));
-
-    $productosCotizacion = $pdo->query(
-        "SELECT *
-         FROM productos
-         WHERE id IN ($ids)"
-    )->fetchAll(PDO::FETCH_ASSOC);
-}
-
-if(isset($_POST['enviar']) && !empty($carrito))
-{
-    $stmt = $pdo->prepare(
-    "INSERT INTO cotizaciones
-    (
-        nombre,
-        empresa,
-        telefono,
-        correo,
-        comentarios
-    )
-    VALUES
-    (
-        ?,?,?,?,?
-    )");
-
-    $stmt->execute([
-        $_POST['nombre'],
-        $_POST['empresa'],
-        $_POST['telefono'],
-        $_POST['correo'],
-        $_POST['comentarios']
-    ]);
-
-    $cotizacion_id = $pdo->lastInsertId();
-
-    foreach($carrito as $producto_id => $cantidad)
-    {
-        $stmt = $pdo->prepare(
-        "INSERT INTO cotizacion_detalle
-        (
-            cotizacion_id,
-            producto_id,
-            cantidad
-        )
-        VALUES
-        (
-            ?,?,?
-        )");
-
-        $stmt->execute([
-            $cotizacion_id,
-            $producto_id,
-            $cantidad
-        ]);
+// 1. PROCESAR ELIMINACIÓN
+if (isset($_GET['eliminar'])) {
+    $id_eliminar = (int)$_GET['eliminar'];
+    if (isset($_SESSION['cotizacion'][$id_eliminar])) {
+        unset($_SESSION['cotizacion'][$id_eliminar]);
+        if (empty($_SESSION['cotizacion'])) {
+            unset($_SESSION['cotizacion']);
+        }
     }
-
-    unset($_SESSION['cotizacion']);
-
-    $enviado = true;
+    header("Location: cotizacion.php");
+    exit;
 }
 
+// 2. PROCESAR ACTUALIZACIÓN DE CANTIDADES
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['actualizar_cantidades'])) {
+    if (isset($_POST['cantidades']) && is_array($_POST['cantidades'])) {
+        foreach ($_POST['cantidades'] as $pid => $cantidad) {
+            $cantidad = (int)$cantidad;
+            $pid = (int)$pid;
+            if ($cantidad > 0) {
+                $_SESSION['cotizacion'][$pid] = $cantidad;
+            } else {
+                unset($_SESSION['cotizacion'][$pid]);
+            }
+        }
+        if (empty($_SESSION['cotizacion'])) {
+            unset($_SESSION['cotizacion']);
+        }
+    }
+    header("Location: cotizacion.php");
+    exit;
+}
+
+// 3. OBTENER PRODUCTOS DEL CARRITO DESDE SATIVA
+$productos_carrito = [];
+$total_general = 0;
+
+if (!empty($_SESSION['cotizacion'])) {
+    $ids = array_keys($_SESSION['cotizacion']);
+    $placeholders = implode(',', array_fill(0, count($ids), '?'));
+    
+    $stmt = $pdo_sativa->prepare("
+        SELECT p.id, p.Codigo, p.Descripcion, p.Precio1, pi.Path1 as imagen
+        FROM producto p
+        LEFT JOIN producto_imagenes pi ON p.id = pi.idProducto AND pi.Deleted = 0
+        WHERE p.id IN ($placeholders) AND p.Activo = 1 AND p.Deleted = 0
+    ");
+    $stmt->execute($ids);
+    $productos_carrito = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // Calcular total general
+    foreach ($productos_carrito as $p) {
+        $cantidad = $_SESSION['cotizacion'][$p['id']];
+        $total_general += ($p['Precio1'] * $cantidad);
+    }
+}
+
+// Función auxiliar para imágenes
+function getUrlImg($path) {
+    if (empty($path)) return 'https://via.placeholder.com/80?text=Sin+Img';
+    if (strpos($path, 'http') === 0) return $path;
+    return (defined('BASE_URL') ? BASE_URL : '/') . ltrim($path, '/');
+}
 ?>
 
+<style>
+    .cart-table th { background-color: #f8f9fa; font-weight: 600; color: #2c3e50; }
+    .cart-total { font-size: 1.5rem; font-weight: 800; color: #28a745; }
+    .qty-input { width: 70px; text-align: center; }
+</style>
+
 <div class="container py-5">
+    <h1 class="h2 fw-bold mb-4 text-center">Tu Cotización</h1>
 
-    <div class="bg-success text-white p-4 rounded mb-4">
+    <?php if (empty($productos_carrito)): ?>
+        <!-- Carrito Vacío -->
+        <div class="text-center py-5 bg-light rounded-3">
+            <i class="fas fa-shopping-cart fa-4x text-muted mb-3"></i>
+            <h3 class="text-muted">Tu cotización está vacía</h3>
+            <p class="text-muted mb-4">Agrega productos desde nuestro catálogo para comenzar.</p>
+            <a href="productos.php" class="btn btn-success btn-lg" style="border-radius: 50px; padding: 12px 40px;">
+                <i class="fas fa-arrow-left me-2"></i> Ver Catálogo de Productos
+            </a>
+        </div>
+    <?php else: ?>
+        
+        <!-- Formulario para actualizar cantidades -->
+        <form method="POST" action="cotizacion.php">
+            <div class="table-responsive mb-4">
+                <table class="table table-hover align-middle cart-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 80px;">Imagen</th>
+                            <th>Código</th>
+                            <th>Producto</th>
+                            <th class="text-center" style="width: 120px;">Cantidad</th>
+                            <th class="text-end" style="width: 130px;">P. Unitario</th>
+                            <th class="text-end" style="width: 130px;">Subtotal</th>
+                            <th class="text-center" style="width: 80px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($productos_carrito as $p): 
+                            $cantidad = $_SESSION['cotizacion'][$p['id']];
+                            $subtotal = $p['Precio1'] * $cantidad;
+                        ?>
+                            <tr>
+                                <td>
+                                    <img src="<?= getUrlImg($p['imagen']) ?>" 
+                                         class="img-thumbnail" 
+                                         style="width: 60px; height: 60px; object-fit: contain;" 
+                                         alt="<?= htmlspecialchars($p['Descripcion']) ?>">
+                                </td>
+                                <td><strong><?= htmlspecialchars($p['Codigo']) ?></strong></td>
+                                <td><?= htmlspecialchars($p['Descripcion']) ?></td>
+                                <td class="text-center">
+                                    <input type="number" name="cantidades[<?= $p['id'] ?>]" 
+                                           value="<?= $cantidad ?>" min="1" 
+                                           class="form-control form-control-sm qty-input mx-auto">
+                                </td>
+                                <td class="text-end">$<?= number_format($p['Precio1'], 2) ?></td>
+                                <td class="text-end fw-bold">$<?= number_format($subtotal, 2) ?></td>
+                                <td class="text-center">
+                                    <a href="?eliminar=<?= $p['id'] ?>" class="btn btn-sm btn-outline-danger" title="Eliminar" onclick="return confirm('¿Eliminar este producto?')">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="d-flex justify-content-between align-items-center mb-5">
+                <a href="productos.php" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i> Seguir agregando productos
+                </a>
+                <button type="submit" name="actualizar_cantidades" class="btn btn-primary">
+                    <i class="fas fa-sync me-2"></i> Actualizar Cantidades
+                </button>
+            </div>
+        </form>
 
-        <h1 class="mb-0">
-            Solicitud de Cotización
-        </h1>
+        <!-- Resumen y Formulario de Envío -->
+        <div class="row g-4">
+            <!-- Resumen de Total -->
+            <div class="col-lg-5">
+                <div class="card border-0 shadow-sm bg-light">
+                    <div class="card-body p-4">
+                        <h4 class="fw-bold mb-3">Resumen de la Cotización</h4>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Productos distintos:</span>
+                            <strong><?= count($productos_carrito) ?></strong>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="h5 mb-0">Total Estimado:</span>
+                            <span class="cart-total mb-0">$<?= number_format($total_general, 2) ?></span>
+                        </div>
+                        <small class="text-muted d-block mt-2">* Precios sujetos a cambio sin previo aviso. IVA no incluido.</small>
+                    </div>
+                </div>
+            </div>
 
-        <small>
-            Complete los datos para recibir una propuesta personalizada.
-        </small>
-
-    </div>
-
-    <?php if(isset($enviado)): ?>
-
-        <div class="alert alert-success">
-
-            Su solicitud fue enviada correctamente.
-
+            <!-- Formulario de Datos del Cliente -->
+            <div class="col-lg-7">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="fas fa-paper-plane me-2"></i>Solicitar Cotización Formal</h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <p class="text-muted mb-4">Completa tus datos para enviarte la cotización oficial por correo electrónico.</p>
+                        
+                        <!-- Aquí iría el formulario que guarda en la tabla 'cotizaciones' y 'cotizacion_detalle' -->
+                        <form method="POST" action="procesar_cotizacion.php"> <!-- Ajusta el action a tu archivo de procesamiento -->
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Nombre Completo <span class="text-danger">*</span></label>
+                                    <input type="text" name="nombre" class="form-control" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Empresa</label>
+                                    <input type="text" name="empresa" class="form-control">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Teléfono / WhatsApp <span class="text-danger">*</span></label>
+                                    <input type="tel" name="telefono" class="form-control" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Correo Electrónico <span class="text-danger">*</span></label>
+                                    <input type="email" name="correo" class="form-control" required>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label">Comentarios o Indicaciones Especiales</label>
+                                    <textarea name="comentarios" class="form-control" rows="3" placeholder="Ej. Necesito factura, dirección de envío, etc."></textarea>
+                                </div>
+                                <div class="col-12 text-end mt-4">
+                                    <button type="submit" class="btn btn-success btn-lg px-5" style="border-radius: 50px;">
+                                        <i class="fas fa-check-circle me-2"></i> Enviar Solicitud
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
         </div>
 
     <?php endif; ?>
-
-    <div class="row mb-4">
-
-        <div class="col-md-4">
-
-            <div class="card border-success">
-
-                <div class="card-body text-center">
-
-                    <h3><?= count($productosCotizacion) ?></h3>
-
-                    <strong>
-                        Productos Seleccionados
-                    </strong>
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
-
-    <div class="card shadow mb-4">
-
-        <div class="card-header bg-success text-white">
-
-            <h4 class="mb-0">
-                Productos Seleccionados
-            </h4>
-
-        </div>
-
-        <div class="card-body">
-
-            <?php if(empty($productosCotizacion)): ?>
-
-                <div class="alert alert-warning">
-
-                    No hay productos agregados.
-
-                </div>
-
-            <?php else: ?>
-
-                <table class="table table-hover align-middle">
-
-                    <thead>
-
-                    <tr>
-                        <th>Imagen</th>
-                        <th>Producto</th>
-                        <th>Cantidad</th>
-                        <th width="120">Acción</th>
-                    </tr>
-
-                    </thead>
-
-                    <tbody>
-
-                    <?php foreach($productosCotizacion as $producto): ?>
-
-                        <tr>
-
-                            <td width="120">
-
-                                <?php if($producto['imagen']): ?>
-
-                                    <img
-                                    src="uploads/productos/<?= $producto['imagen'] ?>"
-                                    class="img-fluid rounded">
-
-                                <?php endif; ?>
-
-                            </td>
-
-                            <td>
-
-                                <strong>
-                                    <?= htmlspecialchars($producto['nombre']) ?>
-                                </strong>
-
-                                <br>
-
-                                <?= htmlspecialchars($producto['descripcion_corta']) ?>
-
-                            </td>
-
-                            <td>
-
-                                <?= $carrito[$producto['id']] ?>
-
-                            </td>
-
-                            <td>
-
-                                <a
-                                href="cotizacion_eliminar.php?id=<?= $producto['id'] ?>"
-                                class="btn btn-danger btn-sm">
-
-                                    Eliminar
-
-                                </a>
-
-                            </td>
-
-                        </tr>
-
-                    <?php endforeach; ?>
-
-                    </tbody>
-
-                </table>
-
-            <?php endif; ?>
-
-        </div>
-
-    </div>
-
-    <div class="card shadow">
-
-        <div class="card-header bg-success text-white">
-
-            <h4 class="mb-0">
-                Datos del Cliente
-            </h4>
-
-        </div>
-
-        <div class="card-body">
-
-            <form method="post">
-
-                <div class="row">
-
-                    <div class="col-md-6">
-
-                        <input
-                        type="text"
-                        name="nombre"
-                        class="form-control mb-3"
-                        placeholder="Nombre"
-                        required>
-
-                    </div>
-
-                    <div class="col-md-6">
-
-                        <input
-                        type="text"
-                        name="empresa"
-                        class="form-control mb-3"
-                        placeholder="Empresa">
-
-                    </div>
-
-                </div>
-
-                <input
-                type="text"
-                name="telefono"
-                class="form-control mb-3"
-                placeholder="Teléfono">
-
-                <input
-                type="email"
-                name="correo"
-                class="form-control mb-3"
-                placeholder="Correo">
-
-                <textarea
-                name="comentarios"
-                class="form-control mb-3"
-                rows="5"
-                placeholder="Comentarios"></textarea>
-
-                <button
-                name="enviar"
-                class="btn btn-success"
-                <?= empty($productosCotizacion) ? 'disabled' : '' ?>>
-
-                    Enviar Solicitud
-
-                </button>
-
-            </form>
-
-        </div>
-
-    </div>
-
 </div>
 
 <?php include 'includes/web_footer.php'; ?>

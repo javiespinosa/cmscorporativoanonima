@@ -75,6 +75,13 @@
                 </li>
 
                 <li class="nav-item">
+    <a href="<?= BASE_URL ?>admin/productospremium/index.php" class="nav-link">
+        <i class="nav-icon fas fa-crown text-warning"></i>
+        <p>Productos Premium</p>
+    </a>
+</li>
+
+                <li class="nav-item">
 
 <a href="<?= BASE_URL ?>admin/cotizaciones/index.php"
 class="nav-link">
@@ -85,6 +92,45 @@ class="nav-link">
 
 </a>
 
+</li>
+
+<li class="nav-item">
+    <a href="<?= BASE_URL ?>admin/contacto/mensajes.php" class="nav-link">
+        <i class="nav-icon fas fa-envelope"></i>
+        <p>
+            Mensajes de Contacto
+            <?php
+            // Caché de 60 segundos para no saturar la BD
+            $cache_key = 'total_mensajes_nuevos';
+            $cache_time = 60; // segundos
+            
+            if (!isset($_SESSION[$cache_key]) || $_SESSION[$cache_key]['time'] < time() - $cache_time) {
+                try {
+                    if (!isset($pdo)) {
+                        require_once __DIR__ . '/../config/database.php';
+                    }
+                    $totalNuevos = $pdo->query("SELECT COUNT(*) FROM mensajes_contacto WHERE leido = 0")->fetchColumn();
+                    $_SESSION[$cache_key] = ['value' => $totalNuevos, 'time' => time()];
+                } catch (Exception $e) {
+                    $totalNuevos = 0;
+                }
+            } else {
+                $totalNuevos = $_SESSION[$cache_key]['value'];
+            }
+            
+            if ($totalNuevos > 0):
+            ?>
+                <span class="badge badge-warning right"><?= $totalNuevos ?></span>
+            <?php endif; ?>
+        </p>
+    </a>
+</li>
+
+<li class="nav-item">
+    <a href="<?= BASE_URL ?>admin/promociones/index.php" class="nav-link">
+        <i class="nav-icon fas fa-tags"></i>
+        <p>Promociones</p>
+    </a>
 </li>
 
                 <li class="nav-item">
