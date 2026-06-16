@@ -1,6 +1,30 @@
 <?php
 session_start();
 require_once 'config/database.php';
+require_once 'includes/config_loader.php';
+
+// Función para convertir HEX a RGB
+if (!function_exists('hexToRgb')) {
+    function hexToRgb($hex) {
+        $hex = str_replace('#', '', $hex);
+        if (strlen($hex) == 3) {
+            $r = hexdec(substr($hex, 0, 1) . substr($hex, 0, 1));
+            $g = hexdec(substr($hex, 1, 1) . substr($hex, 1, 1));
+            $b = hexdec(substr($hex, 2, 1) . substr($hex, 2, 1));
+        } else {
+            $r = hexdec(substr($hex, 0, 2));
+            $g = hexdec(substr($hex, 2, 2));
+            $b = hexdec(substr($hex, 4, 2));
+        }
+        return "$r, $g, $b";
+    }
+}
+
+// Obtener colores de la configuración
+$color_primario = $config['color_primario'] ?? '#28a745';
+$color_secundario = $config['color_secundario'] ?? '#20c997';
+$rgb_primario = hexToRgb($color_primario);
+$rgb_secundario = hexToRgb($color_secundario);
 
 $token = $_GET['token'] ?? '';
 $mensaje = '';
@@ -79,6 +103,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $token_valido) {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
+        /* Variables CSS dinámicas */
+        :root {
+            --color-primario: <?= $color_primario ?>;
+            --color-secundario: <?= $color_secundario ?>;
+            --rgb-primario: <?= $rgb_primario ?>;
+            --rgb-secundario: <?= $rgb_secundario ?>;
+        }
+
         body {
             min-height: 100vh;
             display: flex;
@@ -96,7 +128,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $token_valido) {
             max-width: 450px;
         }
         .recovery-header {
-            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            background: linear-gradient(135deg, var(--color-primario) 0%, var(--color-secundario) 100%);
             padding: 40px 30px;
             text-align: center;
             color: white;
@@ -109,8 +141,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $token_valido) {
             border-radius: 10px;
         }
         .form-control:focus {
-            border-color: #28a745;
-            box-shadow: 0 0 0 4px rgba(40, 167, 69, 0.1);
+            border-color: var(--color-primario);
+            box-shadow: 0 0 0 4px rgba(var(--rgb-primario), 0.1);
         }
         .input-wrapper { position: relative; }
         .input-wrapper i {
@@ -129,20 +161,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $token_valido) {
             cursor: pointer;
             color: #6c757d;
             z-index: 2;
+            transition: color 0.3s ease;
+        }
+        .toggle-password:hover {
+            color: var(--color-primario);
         }
         .btn-recovery {
             width: 100%;
             padding: 14px;
-            background: linear-gradient(135deg, #28a745, #20c997);
+            background: linear-gradient(135deg, var(--color-primario), var(--color-secundario));
             border: none;
             border-radius: 10px;
             color: white;
             font-size: 1.1rem;
             font-weight: 600;
+            transition: all 0.3s ease;
         }
         .btn-recovery:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(40, 167, 69, 0.4);
+            box-shadow: 0 10px 25px rgba(var(--rgb-primario), 0.4);
             color: white;
         }
         .password-strength {

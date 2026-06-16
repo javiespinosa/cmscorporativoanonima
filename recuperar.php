@@ -2,23 +2,43 @@
 session_start();
 require_once 'config/database.php';
 require_once 'config/mail_config.php';
+require_once 'includes/config_loader.php';
 
-// Cargar PHPMailer (ajusta la ruta según tu instalación)
+// Función para convertir HEX a RGB
+if (!function_exists('hexToRgb')) {
+    function hexToRgb($hex) {
+        $hex = str_replace('#', '', $hex);
+        if (strlen($hex) == 3) {
+            $r = hexdec(substr($hex, 0, 1) . substr($hex, 0, 1));
+            $g = hexdec(substr($hex, 1, 1) . substr($hex, 1, 1));
+            $b = hexdec(substr($hex, 2, 1) . substr($hex, 2, 1));
+        } else {
+            $r = hexdec(substr($hex, 0, 2));
+            $g = hexdec(substr($hex, 2, 2));
+            $b = hexdec(substr($hex, 4, 2));
+        }
+        return "$r, $g, $b";
+    }
+}
+
+// Obtener colores de la configuración
+$color_primario = $config['color_primario'] ?? '#28a745';
+$color_secundario = $config['color_secundario'] ?? '#20c997';
+$rgb_primario = hexToRgb($color_primario);
+$rgb_secundario = hexToRgb($color_secundario);
+
+// Cargar PHPMailer
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
 use PHPMailer\PHPMailer\Exception;
 
-// Si usaste Composer:
 if (file_exists(__DIR__ . '/vendor/autoload.php')) {
     require __DIR__ . '/vendor/autoload.php';
-} 
-// Si descargaste directamente:
-elseif (file_exists(__DIR__ . '/PHPMailer/src/PHPMailer.php')) {
+} elseif (file_exists(__DIR__ . '/PHPMailer/src/PHPMailer.php')) {
     require __DIR__ . '/PHPMailer/src/PHPMailer.php';
     require __DIR__ . '/PHPMailer/src/SMTP.php';
     require __DIR__ . '/PHPMailer/src/Exception.php';
-}
-else {
+} else {
     die('Error: PHPMailer no está instalado. Instala con: composer require phpmailer/phpmailer');
 }
 
@@ -32,39 +52,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $mensaje = "Por favor ingresa un correo válido.";
         $tipo_mensaje = "danger";
     } else {
-        // Buscar usuario por correo
         $stmt = $pdo->prepare("SELECT id, nombre FROM usuarios WHERE correo = ? AND activo = 1");
         $stmt->execute([$correo]);
         $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
         
         if ($usuario) {
-            // Generar token seguro
             $token = bin2hex(random_bytes(32));
             $fecha_expiracion = date('Y-m-d H:i:s', strtotime('+1 hour'));
             
-            // Invalidar tokens anteriores
             $pdo->prepare("UPDATE password_resets SET usado = 1 WHERE usuario_id = ? AND usado = 0")
                 ->execute([$usuario['id']]);
             
-            // Guardar nuevo token
             $stmt = $pdo->prepare("
                 INSERT INTO password_resets (usuario_id, token, fecha_expiracion) 
                 VALUES (?, ?, ?)
             ");
             $stmt->execute([$usuario['id'], $token, $fecha_expiracion]);
             
-            // Construir enlace de recuperación
             $base_url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . 
                         "://" . $_SERVER['HTTP_HOST'] . dirname($_SERVER['PHP_SELF']);
             $enlace = $base_url . "/recuperar_cambiar.php?token=" . $token;
             
-            // ============================================
-            // ENVIAR CORREO CON PHPMAILER
-            // ============================================
             try {
                 $mail = new PHPMailer(true);
                 
-                // Configuración del servidor SMTP
                 $mail->isSMTP();
                 $mail->Host = SMTP_HOST;
                 $mail->SMTPAuth = true;
@@ -74,15 +85,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $mail->Port = SMTP_PORT;
                 $mail->CharSet = 'UTF-8';
                 
-                // Remitente y destinatario
                 $mail->setFrom(SMTP_FROM_EMAIL, SMTP_FROM_NAME);
                 $mail->addAddress($correo, $usuario['nombre']);
                 
-                // Contenido del correo
                 $mail->isHTML(true);
                 $mail->Subject = 'Recuperación de Contraseña - ' . SMTP_FROM_NAME;
                 
-                // Cuerpo del correo (HTML profesional)
+                // ============================================
+                // CORREO CON COLORES DINÁMICOS
+                // ============================================
                 $mail->Body = "
                     <!DOCTYPE html>
                     <html>
@@ -104,7 +115,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 box-shadow: 0 10px 30px rgba(0,0,0,0.1);
                             }
                             .header { 
-                                background: linear-gradient(135deg, #28a745 0%, #20c997 100%); 
+                                background: linear-gradient(135deg, {$color_primario} 0%, {$color_secundario} 100%); 
                                 color: white; 
                                 padding: 40px 30px; 
                                 text-align: center;
@@ -123,12 +134,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 color: #333;
                             }
                             .content h2 { 
-                                color: #28a745; 
+                                color: {$color_primario}; 
                                 margin-top: 0;
                             }
                             .btn { 
                                 display: inline-block; 
-                                background: linear-gradient(135deg, #28a745, #20c997); 
+                                background: linear-gradient(135deg, {$color_primario}, {$color_secundario}); 
                                 color: white !important; 
                                 padding: 15px 40px; 
                                 text-decoration: none; 
@@ -138,7 +149,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 font-size: 16px;
                             }
                             .btn:hover {
-                                background: linear-gradient(135deg, #20c997, #28a745);
+                                background: linear-gradient(135deg, {$color_secundario}, {$color_primario});
                             }
                             .warning { 
                                 background: #fff3cd; 
@@ -164,7 +175,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 word-break: break-all;
                             }
                             .link-alt a {
-                                color: #28a745;
+                                color: {$color_primario};
                                 text-decoration: none;
                             }
                         </style>
@@ -209,7 +220,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </html>
                 ";
                 
-                // Versión texto plano (para clientes que no soportan HTML)
                 $mail->AltBody = "Hola {$usuario['nombre']},\n\n" .
                                 "Para restablecer tu contraseña, visita este enlace:\n" .
                                 "$enlace\n\n" .
@@ -223,10 +233,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $tipo_mensaje = "success";
                 
             } catch (Exception $e) {
-                // Error al enviar el correo
                 error_log("Error PHPMailer: " . $mail->ErrorInfo);
                 
-                // MODO PRUEBA: Mostrar enlace en pantalla (quitar en producción)
                 $mensaje = "⚠️ Error al enviar el correo: " . $mail->ErrorInfo . "<br><br>
                            <strong>MODO PRUEBA:</strong> Usa este enlace directamente:<br>
                            <a href='$enlace' class='alert-link' style='word-break: break-all;'>$enlace</a>";
@@ -234,7 +242,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             
         } else {
-            // Por seguridad, no revelamos si el correo existe o no
             $mensaje = "Si el correo está registrado, recibirás un enlace de recuperación en los próximos minutos.";
             $tipo_mensaje = "success";
         }
@@ -250,6 +257,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
+        /* Variables CSS dinámicas */
+        :root {
+            --color-primario: <?= $color_primario ?>;
+            --color-secundario: <?= $color_secundario ?>;
+            --rgb-primario: <?= $rgb_primario ?>;
+            --rgb-secundario: <?= $rgb_secundario ?>;
+        }
+
         body {
             min-height: 100vh;
             display: flex;
@@ -273,7 +288,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             to { opacity: 1; transform: translateY(0); }
         }
         .recovery-header {
-            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            background: linear-gradient(135deg, var(--color-primario) 0%, var(--color-secundario) 100%);
             padding: 40px 30px;
             text-align: center;
             color: white;
@@ -298,8 +313,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             transition: all 0.3s ease;
         }
         .form-control:focus {
-            border-color: #28a745;
-            box-shadow: 0 0 0 4px rgba(40, 167, 69, 0.1);
+            border-color: var(--color-primario);
+            box-shadow: 0 0 0 4px rgba(var(--rgb-primario), 0.1);
         }
         .input-wrapper {
             position: relative;
@@ -315,7 +330,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .btn-recovery {
             width: 100%;
             padding: 14px;
-            background: linear-gradient(135deg, #28a745, #20c997);
+            background: linear-gradient(135deg, var(--color-primario), var(--color-secundario));
             border: none;
             border-radius: 10px;
             color: white;
@@ -325,7 +340,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         .btn-recovery:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(40, 167, 69, 0.4);
+            box-shadow: 0 10px 25px rgba(var(--rgb-primario), 0.4);
             color: white;
         }
         .back-link {
@@ -333,9 +348,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             margin-top: 20px;
         }
         .back-link a {
-            color: #28a745;
+            color: var(--color-primario);
             text-decoration: none;
             font-weight: 600;
+            transition: color 0.3s ease;
+        }
+        .back-link a:hover {
+            color: var(--color-secundario);
         }
     </style>
 </head>

@@ -47,7 +47,7 @@ if (!empty($config['objetivos'])) {
         position: absolute;
         top: 0; left: 0;
         width: 100%; height: 100%;
-        background: linear-gradient(135deg, rgba(40, 167, 69, 0.85), rgba(32, 201, 151, 0.75));
+        background: linear-gradient(135deg, rgba(var(--rgb-primario), 0.85), rgba(var(--rgb-secundario), 0.75));
     }
     .nosotros-hero-content {
         position: relative;
@@ -91,7 +91,7 @@ if (!empty($config['objetivos'])) {
         to { opacity: 1; transform: translateY(0); }
     }
 
-    /* ====== SECCIÓN HISTORIA (TIMELINE) ====== */
+    /* ====== SECCIÓN HISTORIA ====== */
     .historia-section {
         padding: 100px 0;
         background: white;
@@ -102,7 +102,7 @@ if (!empty($config['objetivos'])) {
         margin-bottom: 70px;
     }
     .section-title-pro span {
-        color: #28a745;
+        color: var(--color-primario);
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 3px;
@@ -125,7 +125,7 @@ if (!empty($config['objetivos'])) {
         transform: translateX(-50%);
         width: 80px;
         height: 4px;
-        background: linear-gradient(90deg, #28a745, #20c997);
+        background: linear-gradient(90deg, var(--color-primario), var(--color-secundario));
         border-radius: 2px;
     }
     .historia-texto {
@@ -162,14 +162,14 @@ if (!empty($config['objetivos'])) {
         position: absolute;
         top: 0; left: 0;
         width: 100%; height: 5px;
-        background: linear-gradient(90deg, #28a745, #20c997);
+        background: linear-gradient(90deg, var(--color-primario), var(--color-secundario));
         transform: scaleX(0);
         transform-origin: left;
         transition: transform 0.4s ease;
     }
     .filosofia-card:hover {
         transform: translateY(-15px);
-        box-shadow: 0 25px 60px rgba(0,0,0,0.15);
+        box-shadow: 0 25px 60px rgba(var(--rgb-primario), 0.15);
     }
     .filosofia-card:hover::before {
         transform: scaleX(1);
@@ -178,14 +178,14 @@ if (!empty($config['objetivos'])) {
         width: 100px;
         height: 100px;
         margin: 0 auto 30px;
-        background: linear-gradient(135deg, #28a745, #20c997);
+        background: linear-gradient(135deg, var(--color-primario), var(--color-secundario));
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
         color: white;
         font-size: 2.8rem;
-        box-shadow: 0 10px 30px rgba(40,167,69,0.3);
+        box-shadow: 0 10px 30px rgba(var(--rgb-primario), 0.3);
         transition: all 0.4s ease;
     }
     .filosofia-card:hover .filosofia-icon {
@@ -220,24 +220,24 @@ if (!empty($config['objetivos'])) {
     }
     .valor-card:hover {
         transform: translateY(-10px);
-        border-color: #28a745;
-        box-shadow: 0 15px 40px rgba(40,167,69,0.2);
+        border-color: var(--color-primario);
+        box-shadow: 0 15px 40px rgba(var(--rgb-primario), 0.2);
     }
     .valor-icon {
         width: 70px;
         height: 70px;
         margin: 0 auto 20px;
-        background: linear-gradient(135deg, rgba(40,167,69,0.1), rgba(32,201,151,0.1));
+        background: linear-gradient(135deg, rgba(var(--rgb-primario), 0.1), rgba(var(--rgb-secundario), 0.1));
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        color: #28a745;
+        color: var(--color-primario);
         font-size: 1.8rem;
         transition: all 0.4s ease;
     }
     .valor-card:hover .valor-icon {
-        background: linear-gradient(135deg, #28a745, #20c997);
+        background: linear-gradient(135deg, var(--color-primario), var(--color-secundario));
         color: white;
         transform: scale(1.1);
     }
@@ -257,11 +257,11 @@ if (!empty($config['objetivos'])) {
         color: white;
     }
     .objetivos-section .section-title-pro span {
-        color: #20c997;
+        color: var(--color-secundario);
     }
     .objetivo-item {
         background: rgba(255,255,255,0.05);
-        border-left: 4px solid #28a745;
+        border-left: 4px solid var(--color-primario);
         padding: 25px 30px;
         margin-bottom: 20px;
         border-radius: 10px;
@@ -279,7 +279,7 @@ if (!empty($config['objetivos'])) {
         justify-content: center;
         width: 40px;
         height: 40px;
-        background: linear-gradient(135deg, #28a745, #20c997);
+        background: linear-gradient(135deg, var(--color-primario), var(--color-secundario));
         border-radius: 50%;
         font-weight: 800;
         font-size: 1.1rem;
@@ -295,7 +295,7 @@ if (!empty($config['objetivos'])) {
     /* ====== CTA FINAL ====== */
     .cta-section {
         padding: 80px 0;
-        background: linear-gradient(135deg, #28a745, #20c997);
+        background: linear-gradient(135deg, var(--color-primario), var(--color-secundario));
         color: white;
         text-align: center;
     }
@@ -311,7 +311,7 @@ if (!empty($config['objetivos'])) {
     }
     .btn-cta {
         background: white;
-        color: #28a745;
+        color: var(--color-primario);
         padding: 15px 40px;
         border-radius: 50px;
         font-weight: 700;
@@ -324,7 +324,36 @@ if (!empty($config['objetivos'])) {
     .btn-cta:hover {
         transform: translateY(-3px);
         box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-        color: #28a745;
+        color: var(--color-primario);
+    }
+
+    /* ====== ESTADÍSTICAS ====== */
+    .stats-section {
+        padding: 80px 0;
+        background: linear-gradient(135deg, var(--color-primario), var(--color-secundario));
+        color: white;
+    }
+    .stat-item {
+        text-align: center;
+        padding: 20px;
+    }
+    .stat-number {
+        font-size: 3.5rem;
+        font-weight: 900;
+        line-height: 1;
+        margin-bottom: 10px;
+        text-shadow: 2px 2px 10px rgba(0,0,0,0.2);
+    }
+    .stat-label {
+        font-size: 1.1rem;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        opacity: 0.9;
+    }
+    .stat-icon {
+        font-size: 2.5rem;
+        margin-bottom: 15px;
+        opacity: 0.8;
     }
 
     /* Responsive */
@@ -336,39 +365,8 @@ if (!empty($config['objetivos'])) {
         .filosofia-card { padding: 30px 20px; }
         .filosofia-card h3 { font-size: 1.5rem; }
     }
-
-    /* ====== ESTADÍSTICAS ====== */
-.stats-section {
-    padding: 80px 0;
-    background: linear-gradient(135deg, #28a745, #20c997);
-    color: white;
-}
-.stat-item {
-    text-align: center;
-    padding: 20px;
-}
-.stat-number {
-    font-size: 3.5rem;
-    font-weight: 900;
-    line-height: 1;
-    margin-bottom: 10px;
-    text-shadow: 2px 2px 10px rgba(0,0,0,0.2);
-}
-.stat-label {
-    font-size: 1.1rem;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    opacity: 0.9;
-}
-.stat-icon {
-    font-size: 2.5rem;
-    margin-bottom: 15px;
-    opacity: 0.8;
-}
-
 </style>
 
-<!-- ====== HERO ====== -->
 <!-- ====== HERO ====== -->
 <section class="nosotros-hero" <?php if (!empty($config['imagen_nosotros'])): ?>style="background-image: url('<?= htmlspecialchars($config['imagen_nosotros']) ?>');"<?php endif; ?>>
     <div class="nosotros-hero-content">
@@ -381,6 +379,7 @@ if (!empty($config['objetivos'])) {
         <i class="fas fa-chevron-down"></i>
     </a>
 </section>
+
 <!-- ====== HISTORIA ====== -->
 <?php if (!empty($config['historia'])): ?>
 <section class="historia-section" id="historia">
@@ -566,7 +565,6 @@ $total_productos_catalogo = $pdo->query("SELECT COUNT(*) FROM productos")->fetch
 <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
 <script> AOS.init({ duration: 1000, once: true, offset: 100 }); </script>
 
-<!-- 🔥 PEGA AQUÍ EL JAVASCRIPT DE LOS CONTADORES 🔥 -->
 <script>
 // Contador animado para estadísticas
 document.addEventListener('DOMContentLoaded', function() {

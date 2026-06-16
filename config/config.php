@@ -1,3 +1,3 @@
 <?php
 
-define('BASE_URL','/CMSProyecto/cmscorporativoanonima/');
+define('BASE_URL','/cmscorporativoanonima/');

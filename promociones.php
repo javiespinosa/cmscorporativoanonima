@@ -31,7 +31,7 @@ $promociones = $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
     .promo-card:hover {
         transform: translateY(-10px);
-        box-shadow: 0 20px 50px rgba(220, 53, 69, 0.15);
+        box-shadow: 0 20px 50px rgba(220, 53, 69, 0.2);
     }
 
     /* ====== CONTENEDOR DE IMAGEN CON EFECTO ZOOM ====== */
@@ -120,6 +120,12 @@ $promociones = $stmt->fetchAll(PDO::FETCH_ASSOC);
         font-size: 0.85rem;
         box-shadow: 0 4px 10px rgba(220, 53, 69, 0.4);
         z-index: 3;
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
     }
 
     /* ====== MODAL LIGHTBOX PERSONALIZADO ====== */
@@ -279,13 +285,14 @@ $promociones = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         
                         <!-- 🔥 IMAGEN CON LIGHTBOX 🔥 -->
                         <div class="promo-img-wrapper" 
-                             onclick="abrirLightbox('<?= !empty($promo['imagen']) ? 'uploads/promociones/' . htmlspecialchars($promo['imagen']) : 'https://via.placeholder.com/800x600/dc3545/ffffff?text=Promoción' ?>', '<?= htmlspecialchars(addslashes($promo['titulo'])) ?>', '<?= htmlspecialchars(addslashes($promo['descripcion'])) ?>')">
+                             onclick="abrirLightbox('<?= !empty($promo['imagen']) ? 'uploads/promociones/' . htmlspecialchars($promo['imagen']) : 'https://placehold.co/800x600/dc3545/ffffff?text=Promoción' ?>', '<?= htmlspecialchars(addslashes($promo['titulo'])) ?>', '<?= htmlspecialchars(addslashes($promo['descripcion'])) ?>')">
                             
                             <?php if (!empty($promo['imagen'])): ?>
                                 <img src="uploads/promociones/<?= htmlspecialchars($promo['imagen']) ?>" 
-                                     alt="<?= htmlspecialchars($promo['titulo']) ?>">
+                                     alt="<?= htmlspecialchars($promo['titulo']) ?>"
+                                     onerror="this.src='https://placehold.co/600x400/dc3545/ffffff?text=Promoción'">
                             <?php else: ?>
-                                <img src="https://via.placeholder.com/600x400/dc3545/ffffff?text=Promoción" alt="Promoción">
+                                <img src="https://placehold.co/600x400/dc3545/ffffff?text=Promoción" alt="Promoción">
                             <?php endif; ?>
                             
                             <!-- Overlay con icono de zoom -->
@@ -377,7 +384,7 @@ function abrirLightbox(imagen, titulo, descripcion) {
     modal.show();
 }
 
-// ====== CERRAR CON TECLA ESC Y NAVEGACIÓN ======
+// ====== CERRAR CON TECLA ESC ======
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
         const modal = bootstrap.Modal.getInstance(document.getElementById('lightboxPromo'));

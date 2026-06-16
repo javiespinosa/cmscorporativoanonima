@@ -64,16 +64,31 @@ if (!empty($_SESSION['cotizacion'])) {
 
 // Función auxiliar para imágenes
 function getUrlImg($path) {
-    if (empty($path)) return 'https://via.placeholder.com/80?text=Sin+Img';
+    if (empty($path)) return 'https://placehold.co/80x80/e9ecef/6c757d?text=Sin+Img';
     if (strpos($path, 'http') === 0) return $path;
     return (defined('BASE_URL') ? BASE_URL : '/') . ltrim($path, '/');
 }
 ?>
 
 <style>
-    .cart-table th { background-color: #f8f9fa; font-weight: 600; color: #2c3e50; }
-    .cart-total { font-size: 1.5rem; font-weight: 800; color: #28a745; }
-    .qty-input { width: 70px; text-align: center; }
+    .cart-table th { 
+        background-color: #f8f9fa; 
+        font-weight: 600; 
+        color: #2c3e50; 
+    }
+    .cart-total { 
+        font-size: 1.5rem; 
+        font-weight: 800; 
+        color: var(--color-primario); /* ← CAMBIADO de #28a745 */
+    }
+    .qty-input { 
+        width: 70px; 
+        text-align: center; 
+    }
+    /* Sombra dinámica al pasar el mouse sobre la tabla */
+    .cart-table tbody tr:hover {
+        box-shadow: 0 4px 12px rgba(var(--rgb-primario), 0.1);
+    }
 </style>
 
 <div class="container py-5">
@@ -126,7 +141,9 @@ function getUrlImg($path) {
                                            class="form-control form-control-sm qty-input mx-auto">
                                 </td>
                                 <td class="text-end">$<?= number_format($p['Precio1'], 2) ?></td>
-                                <td class="text-end fw-bold">$<?= number_format($subtotal, 2) ?></td>
+                                <td class="text-end fw-bold" style="color: var(--color-primario);">
+                                    $<?= number_format($subtotal, 2) ?>
+                                </td>
                                 <td class="text-center">
                                     <a href="?eliminar=<?= $p['id'] ?>" class="btn btn-sm btn-outline-danger" title="Eliminar" onclick="return confirm('¿Eliminar este producto?')">
                                         <i class="fas fa-trash"></i>
@@ -178,8 +195,7 @@ function getUrlImg($path) {
                     <div class="card-body p-4">
                         <p class="text-muted mb-4">Completa tus datos para enviarte la cotización oficial por correo electrónico.</p>
                         
-                        <!-- Aquí iría el formulario que guarda en la tabla 'cotizaciones' y 'cotizacion_detalle' -->
-                        <form method="POST" action="procesar_cotizacion.php"> <!-- Ajusta el action a tu archivo de procesamiento -->
+                        <form method="POST" action="procesar_cotizacion.php">
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <label class="form-label">Nombre Completo <span class="text-danger">*</span></label>

@@ -80,7 +80,7 @@ $banners = $pdo->query(
         background: linear-gradient(
             135deg,
             rgba(0, 0, 0, 0.7) 0%,
-            rgba(40, 167, 69, 0.3) 50%,
+            rgba(var(--rgb-primario), 0.3) 50%,
             rgba(0, 0, 0, 0.6) 100%
         );
         z-index: 1;
@@ -123,7 +123,7 @@ $banners = $pdo->query(
     /* Badge superior */
     .banner-badge {
         display: inline-block;
-        background: rgba(40, 167, 69, 0.9);
+        background: rgba(var(--rgb-primario), 0.9);
         color: white;
         padding: 8px 25px;
         border-radius: 50px;
@@ -146,7 +146,7 @@ $banners = $pdo->query(
         letter-spacing: 2px;
         line-height: 1.1;
         animation: fadeInUp 1s ease 0.4s both;
-        background: linear-gradient(135deg, #ffffff 0%, #28a745 100%);
+        background: linear-gradient(135deg, #ffffff 0%, var(--color-primario) 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
@@ -175,7 +175,7 @@ $banners = $pdo->query(
     }
     
     .btn-hero {
-        background: linear-gradient(135deg, #28a745, #20c997);
+        background: linear-gradient(135deg, var(--color-primario), var(--color-secundario));
         color: white;
         padding: 15px 45px;
         border-radius: 50px;
@@ -184,7 +184,7 @@ $banners = $pdo->query(
         letter-spacing: 2px;
         border: none;
         transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-        box-shadow: 0 8px 25px rgba(40,167,69,0.4);
+        box-shadow: 0 8px 25px rgba(var(--rgb-primario), 0.4);
         position: relative;
         overflow: hidden;
         text-decoration: none;
@@ -211,7 +211,7 @@ $banners = $pdo->query(
     
     .btn-hero:hover {
         transform: translateY(-5px) scale(1.05);
-        box-shadow: 0 15px 40px rgba(40,167,69,0.6);
+        box-shadow: 0 15px 40px rgba(var(--rgb-primario), 0.6);
         color: white;
     }
     
@@ -232,7 +232,7 @@ $banners = $pdo->query(
     
     .btn-hero-outline:hover {
         background: white;
-        color: #28a745;
+        color: var(--color-primario);
         transform: translateY(-5px);
         box-shadow: 0 10px 30px rgba(255,255,255,0.3);
     }
@@ -257,7 +257,7 @@ $banners = $pdo->query(
     }
     
     #sliderPrincipal .carousel-indicators button.active {
-        background: #28a745;
+        background: var(--color-primario);
         width: 80px;
     }
     
@@ -283,7 +283,7 @@ $banners = $pdo->query(
         height: 80px;
         top: 50%;
         transform: translateY(-50%);
-        background: rgba(40, 167, 69, 0.8);
+        background: rgba(var(--rgb-primario), 0.8);
         border-radius: 50%;
         margin: 0 30px;
         opacity: 0;
@@ -299,7 +299,7 @@ $banners = $pdo->query(
     
     #sliderPrincipal .carousel-control-prev:hover,
     #sliderPrincipal .carousel-control-next:hover {
-        background: #28a745;
+        background: var(--color-primario);
         transform: translateY(-50%) scale(1.1);
     }
     
@@ -326,7 +326,7 @@ $banners = $pdo->query(
     }
     
     .slide-counter .current {
-        color: #28a745;
+        color: var(--color-primario);
         font-size: 1.2rem;
         font-weight: 700;
     }
@@ -344,7 +344,7 @@ $banners = $pdo->query(
     
     .carousel-progress-bar {
         height: 100%;
-        background: linear-gradient(90deg, #28a745, #20c997);
+        background: linear-gradient(90deg, var(--color-primario), var(--color-secundario));
         width: 0;
         animation: progressBar 5s linear infinite;
     }
@@ -430,10 +430,6 @@ $banners = $pdo->query(
         }
     }
 
-
-
-
-
     /* ====== SECCIÓN QUIÉNES SOMOS ====== */
     .section-title {
         text-align: center;
@@ -456,7 +452,7 @@ $banners = $pdo->query(
         transform: translateX(-50%);
         width: 80px;
         height: 4px;
-        background: linear-gradient(90deg, #28a745, #20c997);
+        background: linear-gradient(90deg, var(--color-primario), var(--color-secundario));
         border-radius: 2px;
     }
     .section-title p {
@@ -485,7 +481,7 @@ $banners = $pdo->query(
         left: 0;
         width: 100%;
         height: 5px;
-        background: linear-gradient(90deg, #28a745, #20c997);
+        background: linear-gradient(90deg, var(--color-primario), var(--color-secundario));
         transform: scaleX(0);
         transform-origin: left;
         transition: transform 0.4s ease;
@@ -501,7 +497,7 @@ $banners = $pdo->query(
         width: 90px;
         height: 90px;
         margin: 0 auto 25px;
-        background: linear-gradient(135deg, #28a745, #20c997);
+        background: linear-gradient(135deg, var(--color-primario), var(--color-secundario));
         border-radius: 50%;
         display: flex;
         align-items: center;
@@ -509,11 +505,11 @@ $banners = $pdo->query(
         color: white;
         font-size: 2.5rem;
         transition: all 0.4s ease;
-        box-shadow: 0 10px 25px rgba(40,167,69,0.3);
+        box-shadow: 0 10px 25px rgba(var(--rgb-primario), 0.3);
     }
     .info-card:hover .icon-box {
         transform: rotateY(360deg);
-        background: linear-gradient(135deg, #20c997, #28a745);
+        background: linear-gradient(135deg, var(--color-secundario), var(--color-primario));
     }
     .info-card h3 {
         font-size: 1.6rem;
@@ -558,65 +554,61 @@ $banners = $pdo->query(
     }
 
     /* ====== PRODUCTOS PREMIUM ====== */
-.producto-card-premium {
-    background: white;
-    border-radius: 20px;
-    overflow: hidden;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-    transition: all 0.4s ease;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-}
-.producto-card-premium:hover {
-    transform: translateY(-10px);
-    box-shadow: 0 20px 50px rgba(0,0,0,0.15);
-}
-.producto-img-premium {
-    position: relative;
-    overflow: hidden;
-    background: #f8f9fa;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 300px;
-}
-.producto-img-premium img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain; /* Muestra la imagen completa sin recortar */
-    padding: 20px;
-    transition: transform 0.6s ease;
-}
-.producto-card-premium:hover .producto-img-premium img {
-    transform: scale(1.05);
-}
-.producto-info-premium {
-    padding: 25px;
-    text-align: center;
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-}
-.producto-info-premium h5 {
-    font-weight: 700;
-    color: #2c3e50;
-    margin-bottom: 10px;
-    font-size: 1.2rem;
-}
-.producto-info-premium p {
-    color: #6c757d;
-    font-size: 0.95rem;
-    line-height: 1.6;
-    margin: 0;
-}
+    .producto-card-premium {
+        background: white;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        transition: all 0.4s ease;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+    .producto-card-premium:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+    }
+    .producto-img-premium {
+        position: relative;
+        overflow: hidden;
+        background: #f8f9fa;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 300px;
+    }
+    .producto-img-premium img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        padding: 20px;
+        transition: transform 0.6s ease;
+    }
+    .producto-card-premium:hover .producto-img-premium img {
+        transform: scale(1.05);
+    }
+    .producto-info-premium {
+        padding: 25px;
+        text-align: center;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+    .producto-info-premium h5 {
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 10px;
+        font-size: 1.2rem;
+    }
+    .producto-info-premium p {
+        color: #6c757d;
+        font-size: 0.95rem;
+        line-height: 1.6;
+        margin: 0;
+    }
 
     /* ====== ANIMACIONES ====== */
-    @keyframes fadeInUp {
-        from { opacity: 0; transform: translateY(30px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
     @keyframes float {
         0%, 100% { transform: translateY(0); }
         50% { transform: translateY(-10px); }
@@ -664,7 +656,7 @@ $banners = $pdo->query(
     color: #dc3545;
     line-height: 1;
     display: block;
-    font-variant-numeric: tabular-nums; /* Evita que los números "salten" al cambiar */
+    font-variant-numeric: tabular-nums;
 }
 
 .countdown-label {
@@ -840,8 +832,8 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="col-md-6" data-aos="fade-left">
                 <div class="about-image">
                     <?php if(!empty($config['logo'])): ?>
-    <img src="<?= BASE_URL . htmlspecialchars($config['logo']) ?>" alt="Nosotros">
-<?php else: ?>
+                        <img src="<?= BASE_URL . htmlspecialchars($config['logo']) ?>" alt="Nosotros">
+                    <?php else: ?>
                         <img src="https://via.placeholder.com/600x400/28a745/ffffff?text=Nuestra+Empresa" alt="Nosotros">
                     <?php endif; ?>
                 </div>
@@ -880,14 +872,14 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
 
             <div class="col-md-4" data-aos="fade-up" data-aos-delay="300">
-    <div class="info-card">
-        <div class="icon-box float-animation" style="animation-delay: 1s;">
-            <i class="fas fa-heart"></i>
-        </div>
-        <h3>Valores</h3>
-        <p><?= nl2br(htmlspecialchars($config['valores'] ?? 'Compromiso, calidad, innovación y pasión por ofrecer lo mejor a nuestros clientes.')) ?></p>
-    </div>
-</div>
+                <div class="info-card">
+                    <div class="icon-box float-animation" style="animation-delay: 1s;">
+                        <i class="fas fa-heart"></i>
+                    </div>
+                    <h3>Valores</h3>
+                    <p><?= nl2br(htmlspecialchars($config['valores'] ?? 'Compromiso, calidad, innovación y pasión por ofrecer lo mejor a nuestros clientes.')) ?></p>
+                </div>
+            </div>
         </div>
     </div>
 </section>
@@ -914,7 +906,7 @@ if (!empty($promosIndex)):
         </div>
 
         <div class="row g-4">
-                        <?php foreach ($promosIndex as $promo): 
+            <?php foreach ($promosIndex as $promo): 
                 $fechaFinJS = date('c', strtotime($promo['fecha_fin'] . ' 23:59:59'));
             ?>
                 <div class="col-md-6" data-aos="fade-up">
@@ -971,7 +963,6 @@ if (!empty($promosIndex)):
 </section>
 <?php endif; ?>
 
-
 <!-- ====== PRODUCTOS PREMIUM ====== -->
 <section class="productos-section" id="productos">
     <div class="container">
@@ -1006,6 +997,224 @@ if (!empty($promosIndex)):
     </div>
 </section>
 
+<!-- ====== CAUSAS SOCIALES ====== -->
+<?php
+$stmtCausas = $pdo->query("
+    SELECT * FROM causas_sociales 
+    WHERE activo = 1 AND destacado = 1 
+    ORDER BY fecha_creacion DESC 
+    LIMIT 2
+");
+$causasDestacadas = $stmtCausas->fetchAll(PDO::FETCH_ASSOC);
+
+if (!empty($causasDestacadas)):
+?>
+<section class="causas-section" style="background: linear-gradient(135deg, #fff5f5 0%, #ffffff 100%); padding: 100px 0;">
+    <div class="container">
+        <div class="section-title" data-aos="fade-up">
+            <span style="color: var(--color-primario); font-weight: 700; text-transform: uppercase; letter-spacing: 3px; font-size: 0.9rem;">
+                ❤️ Nuestra Causa
+            </span>
+            <h2>Hacemos la Diferencia</h2>
+            <p>Porque creemos que las pequeñas acciones generan grandes cambios</p>
+        </div>
+
+        <div class="row g-4">
+            <?php foreach ($causasDestacadas as $causa): 
+                $stats = json_decode($causa['estadisticas'] ?? '{}', true) ?: [];
+                $iconos_tipo = [
+                    'ANIMAL' => ['icon' => 'fa-paw', 'color' => '#e74c3c'],
+                    'AMBIENTAL' => ['icon' => 'fa-leaf', 'color' => '#27ae60'],
+                    'COMUNITARIA' => ['icon' => 'fa-hands-helping', 'color' => '#3498db'],
+                    'EDUCATIVA' => ['icon' => 'fa-graduation-cap', 'color' => '#9b59b6'],
+                    'OTRA' => ['icon' => 'fa-heart', 'color' => '#f39c12']
+                ];
+                $tipo_info = $iconos_tipo[$causa['tipo']] ?? $iconos_tipo['OTRA'];
+            ?>
+                <div class="col-lg-6" data-aos="fade-up">
+                    <div class="causa-card-destacada">
+                        <div class="row g-0 h-100">
+                            <div class="col-md-5">
+                                <div class="causa-img-destacada">
+                                    <?php if (!empty($causa['imagen_principal'])): ?>
+                                        <img src="uploads/causas/<?= htmlspecialchars($causa['imagen_principal']) ?>" 
+                                             alt="<?= htmlspecialchars($causa['titulo']) ?>">
+                                    <?php else: ?>
+                                        <div class="causa-placeholder" style="background: <?= $tipo_info['color'] ?>;">
+                                            <i class="fas <?= $tipo_info['icon'] ?>"></i>
+                                        </div>
+                                    <?php endif; ?>
+                                    <div class="causa-badge-tipo" style="background: <?= $tipo_info['color'] ?>;">
+                                        <i class="fas <?= $tipo_info['icon'] ?>"></i>
+                                        <?= $causa['tipo'] ?>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-7">
+                                <div class="causa-content-destacada">
+                                    <h3><?= htmlspecialchars($causa['titulo']) ?></h3>
+                                    <?php if (!empty($causa['subtitulo'])): ?>
+                                        <p class="causa-subtitulo"><?= htmlspecialchars($causa['subtitulo']) ?></p>
+                                    <?php endif; ?>
+                                    <p class="causa-descripcion">
+                                        <?= htmlspecialchars(substr($causa['descripcion'], 0, 180)) ?>...
+                                    </p>
+                                    
+                                    <!-- Mini estadísticas -->
+                                    <div class="causa-mini-stats">
+                                        <?php if (!empty($stats['rescatados']) && $stats['rescatados'] > 0): ?>
+                                            <div class="mini-stat">
+                                                <strong><?= number_format($stats['rescatados']) ?></strong>
+                                                <span>Rescatados</span>
+                                            </div>
+                                        <?php endif; ?>
+                                        <?php if (!empty($stats['alimentados']) && $stats['alimentados'] > 0): ?>
+                                            <div class="mini-stat">
+                                                <strong><?= number_format($stats['alimentados']) ?></strong>
+                                                <span>Alimentados</span>
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
+                                    
+                                    <a href="causas.php" class="btn-causa-ver-mas">
+                                        <i class="fas fa-heart me-2"></i> Conoce más
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        </div>
+
+        <div class="text-center mt-5" data-aos="fade-up">
+            <a href="causas.php" class="btn btn-outline-danger btn-lg px-5" style="border-radius: 50px;">
+                <i class="fas fa-hands-helping me-2"></i> Ver todas las causas
+            </a>
+        </div>
+    </div>
+</section>
+
+<style>
+.causa-card-destacada {
+    background: white;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+    transition: all 0.4s ease;
+    height: 100%;
+}
+.causa-card-destacada:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 20px 60px rgba(231, 76, 60, 0.2);
+}
+.causa-img-destacada {
+    position: relative;
+    height: 100%;
+    min-height: 280px;
+    overflow: hidden;
+}
+.causa-img-destacada img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.6s ease;
+}
+.causa-card-destacada:hover .causa-img-destacada img {
+    transform: scale(1.08);
+}
+.causa-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 5rem;
+}
+.causa-badge-tipo {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    color: white;
+    padding: 6px 15px;
+    border-radius: 50px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    z-index: 2;
+}
+.causa-content-destacada {
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+.causa-content-destacada h3 {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #2c3e50;
+    margin-bottom: 10px;
+}
+.causa-subtitulo {
+    color: var(--color-primario);
+    font-style: italic;
+    font-size: 0.95rem;
+    margin-bottom: 15px;
+}
+.causa-descripcion {
+    color: #6c757d;
+    line-height: 1.7;
+    font-size: 0.95rem;
+    flex-grow: 1;
+}
+.causa-mini-stats {
+    display: flex;
+    gap: 20px;
+    margin: 20px 0;
+    padding: 15px 0;
+    border-top: 1px solid #e9ecef;
+    border-bottom: 1px solid #e9ecef;
+}
+.mini-stat {
+    text-align: center;
+}
+.mini-stat strong {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #e74c3c;
+    line-height: 1;
+}
+.mini-stat span {
+    font-size: 0.8rem;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+.btn-causa-ver-mas {
+    display: inline-block;
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+    color: white;
+    padding: 10px 25px;
+    border-radius: 50px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    align-self: flex-start;
+}
+.btn-causa-ver-mas:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(231, 76, 60, 0.4);
+    color: white;
+}
+@media (max-width: 768px) {
+    .causa-img-destacada { min-height: 200px; }
+    .causa-content-destacada { padding: 20px; }
+}
+</style>
+<?php endif; ?>
 
 
 <!-- 🔥 Script de AOS -->
@@ -1020,24 +1229,20 @@ if (!empty($promosIndex)):
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Función para actualizar todos los contadores de la página
     function updateAllCountdowns() {
         const timers = document.querySelectorAll('.countdown-container');
         const now = new Date().getTime();
 
         timers.forEach(timer => {
-            // Si ya fue marcado como expirado, lo saltamos
             if (timer.classList.contains('expired')) return;
 
             const endDate = new Date(timer.dataset.end).getTime();
             const distance = endDate - now;
 
             if (distance < 0) {
-                // Tiempo agotado: Reemplazar el contador con un mensaje
                 timer.innerHTML = '<span class="countdown-expired"><i class="fas fa-hourglass-end me-1"></i> ¡Promoción finalizada!</span>';
                 timer.classList.add('expired');
                 
-                // Opcional: Deshabilitar el botón de acción
                 const btn = timer.parentElement.querySelector('a.btn');
                 if (btn) {
                     btn.classList.remove('btn-danger');
@@ -1048,13 +1253,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
-            // Cálculos de tiempo
             const days = Math.floor(distance / (1000 * 60 * 60 * 24));
             const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
             const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
             const seconds = Math.floor((distance % (1000 * 60)) / 1000);
 
-            // Actualizar el DOM
             timer.querySelector('.days').innerText = String(days).padStart(2, '0');
             timer.querySelector('.hours').innerText = String(hours).padStart(2, '0');
             timer.querySelector('.minutes').innerText = String(minutes).padStart(2, '0');
@@ -1062,16 +1265,12 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Ejecutar inmediatamente para evitar el parpadeo de "00" al cargar
     updateAllCountdowns();
-    
-    // Actualizar cada segundo
     setInterval(updateAllCountdowns, 1000);
 });
 </script>
 
 <script>
-// Auto-ocultar el mensaje después de 10 segundos
 setTimeout(function() {
     const alert = document.querySelector('.alert-success');
     if (alert) {

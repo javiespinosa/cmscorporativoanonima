@@ -29,6 +29,13 @@ if ($producto) {
         $imagenes = $imgData;
     }
 }
+
+// Función auxiliar para construir URL de imagen
+function getUrlImagen($path) {
+    if (empty($path)) return '';
+    if (strpos($path, 'http') === 0 || strpos($path, '//') === 0) return $path;
+    return (defined('BASE_URL') ? BASE_URL : '/') . ltrim($path, '/');
+}
 ?>
 
 <div class="container py-5">
@@ -60,7 +67,7 @@ if ($producto) {
                     <div class="card-body p-4 text-center">
                         <!-- Imagen Principal -->
                         <?php 
-                        $imgPrincipal = !empty($imagenes['Path1']) ? $imagenes['Path1'] : 'https://via.placeholder.com/600x600?text=Sin+Imagen';
+                        $imgPrincipal = !empty($imagenes['Path1']) ? getUrlImagen($imagenes['Path1']) : 'https://placehold.co/600x600/e9ecef/6c757d?text=Sin+Imagen';
                         ?>
                         <img id="mainImage" src="<?= htmlspecialchars($imgPrincipal) ?>" 
                              class="img-fluid rounded mb-3" 
@@ -74,10 +81,10 @@ if ($producto) {
                             foreach ($thumbs as $thumb): 
                                 if (!empty($thumb)): 
                             ?>
-                                <img src="<?= htmlspecialchars($thumb) ?>" 
+                                <img src="<?= htmlspecialchars(getUrlImagen($thumb)) ?>" 
                                      class="img-thumbnail" 
                                      style="width: 70px; height: 70px; object-fit: contain; cursor: pointer; border: 2px solid transparent;"
-                                     onclick="document.getElementById('mainImage').src = this.src; document.querySelectorAll('.img-thumbnail').forEach(i => i.style.borderColor = 'transparent'); this.style.borderColor = '#28a745';"
+                                     onclick="cambiarImagen(this)"
                                      alt="Vista">
                             <?php 
                                 endif; 
@@ -136,5 +143,24 @@ if ($producto) {
     <?php endif; ?>
 
 </div>
+
+<script>
+// Función para cambiar imagen principal y actualizar borde dinámicamente
+function cambiarImagen(thumb) {
+    // Cambiar imagen principal
+    document.getElementById('mainImage').src = thumb.src;
+    
+    // Quitar borde de todas las miniaturas
+    document.querySelectorAll('.img-thumbnail').forEach(i => {
+        i.style.borderColor = 'transparent';
+    });
+    
+    // Obtener el color primario de las variables CSS
+    const colorPrimario = getComputedStyle(document.documentElement).getPropertyValue('--color-primario').trim();
+    
+    // Aplicar el color dinámico a la miniatura seleccionada
+    thumb.style.borderColor = colorPrimario;
+}
+</script>
 
 <?php include 'includes/web_footer.php'; ?>

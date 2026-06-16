@@ -1,4 +1,8 @@
 <?php
+
+// Configurar zona horaria de México
+date_default_timezone_set('America/Mexico_City');
+
 include 'includes/web_header.php';
 include 'includes/web_menu.php';
 
@@ -6,7 +10,7 @@ if (!isset($config)) {
     require_once 'includes/config_loader.php';
 }
 
-// Función para verificar si está abierto ahora
+// Función para verificar si la EMPRESA PRINCIPAL está abierta ahora
 function estaAbiertoAhora($config) {
     $dia_semana = date('N');
     $hora_actual = date('H:i');
@@ -37,6 +41,40 @@ function estaAbiertoAhora($config) {
     return false;
 }
 
+// NUEVA FUNCIÓN: Verificar si una SUCURSAL específica está abierta ahora
+function sucursalAbiertaAhora($horarios_json) {
+    $horarios = json_decode($horarios_json ?? '{}', true);
+    if (!is_array($horarios) || empty($horarios)) return false;
+    
+    $dia_actual_num = (int)date('N'); // 1=Lunes, 7=Domingo
+    $dias_map = [
+        1 => 'Lunes', 2 => 'Martes', 3 => 'Miércoles',
+        4 => 'Jueves', 5 => 'Viernes', 6 => 'Sábado', 7 => 'Domingo'
+    ];
+    
+    $dia_nombre = $dias_map[$dia_actual_num];
+    $horario_hoy = trim($horarios[$dia_nombre] ?? 'Cerrado');
+    
+    if (strtolower($horario_hoy) === 'cerrado' || empty($horario_hoy)) {
+        return false;
+    }
+    
+    // Buscar patrón de horario (ej: "9:00 - 18:00" o "09:00-18:00")
+    if (preg_match('/(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})/', $horario_hoy, $matches)) {
+        $apertura = $matches[1];
+        $cierre = $matches[2];
+        $hora_actual = date('H:i');
+        
+        $apertura_fmt = str_pad(str_replace(':', '', $apertura), 4, '0', STR_PAD_LEFT);
+        $cierre_fmt = str_pad(str_replace(':', '', $cierre), 4, '0', STR_PAD_LEFT);
+        $actual_fmt = str_pad(str_replace(':', '', $hora_actual), 4, '0', STR_PAD_LEFT);
+        
+        return ($actual_fmt >= $apertura_fmt && $actual_fmt <= $cierre_fmt);
+    }
+    
+    return false;
+}
+
 $abierto_ahora = estaAbiertoAhora($config);
 $mensaje_enviado = false;
 $error_envio = '';
@@ -50,14 +88,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['enviar_contacto'])) {
     $asunto = trim($_POST['asunto'] ?? '');
     $mensaje_texto = trim($_POST['mensaje'] ?? '');
     
-    // Validaciones
     if (empty($nombre) || empty($email) || empty($asunto) || empty($mensaje_texto)) {
         $error_envio = 'Por favor completa todos los campos obligatorios.';
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $error_envio = 'Por favor ingresa un correo electrónico válido.';
     } else {
         try {
-            // Guardar en base de datos
             $stmt = $pdo->prepare("
                 INSERT INTO mensajes_contacto 
                 (nombre, email, telefono, empresa, asunto, mensaje, leido) 
@@ -73,35 +109,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['enviar_contacto'])) {
                 $mensaje_texto
             ]);
             
-            // Opcional: Enviar email de notificación al administrador
-            $para = $config['correo']; // Tu correo desde configuración
-            $asunto_email = "Nuevo mensaje de contacto - " . $nombre;
-            $cuerpo = "
-                <h2>Nuevo mensaje desde el sitio web</h2>
-                <p><strong>Nombre:</strong> $nombre</p>
-                <p><strong>Email:</strong> $email</p>
-                <p><strong>Teléfono:</strong> " . ($telefono ?: 'No especificado') . "</p>
-                <p><strong>Empresa:</strong> " . ($empresa ?: 'No especificada') . "</p>
-                <p><strong>Asunto:</strong> $asunto</p>
-                <p><strong>Mensaje:</strong><br>$mensaje_texto</p>
-            ";
-            
-            $headers = "MIME-Version: 1.0\r\n";
-            $headers .= "Content-type: text/html; charset=UTF-8\r\n";
-            $headers .= "From: no-reply@tudominio.com\r\n";
-            $headers .= "Reply-To: $email\r\n";
-            
-            // Descomenta la siguiente línea para enviar email real
-            // mail($para, $asunto_email, $cuerpo, $headers);
-            
             $mensaje_enviado = true;
-            
-            // Limpiar POST para que no se muestren los datos al recargar
             $_POST = [];
             
         } catch (PDOException $e) {
             $error_envio = 'Error al guardar el mensaje. Por favor intenta de nuevo.';
-            // Para debugging: error_log($e->getMessage());
         }
     }
 }
@@ -111,7 +123,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['enviar_contacto'])) {
 <style>
     /* ====== HERO DE CONTACTO ====== */
     .contact-hero {
-        background: linear-gradient(135deg, rgba(40, 167, 69, 0.9), rgba(32, 201, 151, 0.85)),
+        background: linear-gradient(135deg, var(--color-primario), var(--color-secundario)),
                     url('https://images.unsplash.com/photo-1423666639041-f56000c27a9a?w=1600') center/cover;
         color: white;
         padding: 100px 0 80px;
@@ -192,14 +204,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['enviar_contacto'])) {
         left: 0;
         width: 100%;
         height: 4px;
-        background: linear-gradient(90deg, #28a745, #20c997);
+        background: linear-gradient(90deg, var(--color-primario), var(--color-secundario));
         transform: scaleX(0);
         transform-origin: left;
         transition: transform 0.4s ease;
     }
     .contact-card:hover {
         transform: translateY(-10px);
-        box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+        box-shadow: 0 20px 50px rgba(var(--rgb-primario), 0.15);
     }
     .contact-card:hover::before {
         transform: scaleX(1);
@@ -208,7 +220,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['enviar_contacto'])) {
         width: 80px;
         height: 80px;
         margin: 0 auto 20px;
-        background: linear-gradient(135deg, #28a745, #20c997);
+        background: linear-gradient(135deg, var(--color-primario), var(--color-secundario));
         border-radius: 50%;
         display: flex;
         align-items: center;
@@ -216,7 +228,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['enviar_contacto'])) {
         color: white;
         font-size: 2rem;
         transition: all 0.4s ease;
-        box-shadow: 0 10px 25px rgba(40,167,69,0.3);
+        box-shadow: 0 10px 25px rgba(var(--rgb-primario), 0.3);
     }
     .contact-card:hover .contact-icon {
         transform: rotateY(360deg);
@@ -233,7 +245,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['enviar_contacto'])) {
         word-break: break-word;
     }
     .contact-card a:hover {
-        color: #28a745;
+        color: var(--color-primario);
     }
 
     /* ====== FORMULARIO ====== */
@@ -253,15 +265,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['enviar_contacto'])) {
         margin-bottom: 10px;
     }
     .form-control:focus {
-        border-color: #28a745;
-        box-shadow: 0 0 0 0.2rem rgba(40,167,69,0.25);
+        border-color: var(--color-primario);
+        box-shadow: 0 0 0 0.2rem rgba(var(--rgb-primario), 0.25);
     }
     .form-label {
         font-weight: 600;
         color: #495057;
     }
     .btn-submit {
-        background: linear-gradient(135deg, #28a745, #20c997);
+        background: linear-gradient(135deg, var(--color-primario), var(--color-secundario));
         border: none;
         color: white;
         padding: 14px 40px;
@@ -269,71 +281,77 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['enviar_contacto'])) {
         font-weight: 600;
         font-size: 1.1rem;
         transition: all 0.3s ease;
-        box-shadow: 0 5px 15px rgba(40,167,69,0.3);
+        box-shadow: 0 5px 15px rgba(var(--rgb-primario), 0.3);
     }
     .btn-submit:hover {
         transform: translateY(-3px);
-        box-shadow: 0 8px 25px rgba(40,167,69,0.5);
+        box-shadow: 0 8px 25px rgba(var(--rgb-primario), 0.5);
         color: white;
     }
 
-    /* ====== HORARIOS VISUALES ====== */
-    .schedule-card {
-        background: white;
-        border-radius: 20px;
-        padding: 40px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-        height: 100%;
-    }
-    .schedule-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 12px 15px;
-        border-radius: 10px;
-        margin-bottom: 8px;
-        transition: all 0.3s ease;
-    }
-    .schedule-item:hover {
-        background: #f8f9fa;
-        transform: translateX(5px);
-    }
-    .schedule-item.hoy {
-        background: linear-gradient(135deg, rgba(40,167,69,0.1), rgba(32,201,151,0.1));
-        border: 2px solid #28a745;
+    /* ====== BADGE DE ESTADO EN SUCURSALES ====== */
+    .sucursal-status-badge {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        padding: 6px 14px;
+        border-radius: 50px;
+        font-size: 0.75rem;
         font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        z-index: 5;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
     }
-    .schedule-item.cerrado-dia {
-        opacity: 0.6;
+    .sucursal-status-badge.abierta {
+        background: #28a745;
+        color: white;
     }
-    .schedule-day {
-        color: #2c3e50;
-        font-weight: 600;
+    .sucursal-status-badge.cerrada {
+        background: #dc3545;
+        color: white;
     }
-    .schedule-time {
-        color: #6c757d;
-    }
-    .schedule-item.hoy .schedule-day,
-    .schedule-item.hoy .schedule-time {
-        color: #28a745;
-    }
-    .schedule-item.cerrado-dia .schedule-time {
-        color: #dc3545;
+    .sucursal-status-badge .status-dot-mini {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: white;
+        animation: pulse 2s infinite;
     }
 
-    /* ====== MAPA ====== */
-    .map-container {
-        border-radius: 20px;
-        overflow: hidden;
-        box-shadow: 0 15px 40px rgba(0,0,0,0.15);
-        height: 100%;
-        min-height: 400px;
+    /* ====== TARJETAS DE SUCURSALES ====== */
+    .sucursal-card { 
+        transition: transform 0.3s ease, box-shadow 0.3s ease; 
+        position: relative;
     }
-    .map-container iframe {
-        width: 100%;
-        height: 100%;
-        min-height: 400px;
-        border: 0;
+    .sucursal-card:hover { 
+        transform: translateY(-8px); 
+        box-shadow: 0 15px 35px rgba(0,0,0,0.1) !important; 
+    }
+    .horario-item { 
+        display: flex; 
+        justify-content: space-between; 
+        font-size: 0.85rem; 
+        padding: 2px 0; 
+        border-bottom: 1px dashed #e9ecef; 
+    }
+    .horario-item:last-child { border-bottom: none; }
+    .horario-dia { font-weight: 600; color: #495057; }
+    .horario-hora { color: #28a745; font-weight: 500; }
+    .horario-cerrado { color: #dc3545; font-weight: 500; }
+    .horario-item.hoy {
+        background: rgba(40, 167, 69, 0.08);
+        padding: 4px 8px;
+        border-radius: 5px;
+        margin: 0 -8px;
+        border-bottom: none;
+    }
+    .horario-item.hoy .horario-dia {
+        color: var(--color-primario);
+        font-weight: 700;
     }
 
     /* ====== REDES SOCIALES ====== */
@@ -371,12 +389,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['enviar_contacto'])) {
         background: white;
     }
     .accordion-button:not(.collapsed) {
-        background: linear-gradient(135deg, rgba(40,167,69,0.1), rgba(32,201,151,0.1));
+        background: linear-gradient(135deg, rgba(var(--rgb-primario), 0.1), rgba(var(--rgb-secundario), 0.1));
         color: #2c3e50;
         font-weight: 600;
     }
     .accordion-button:focus {
-        box-shadow: 0 0 0 0.2rem rgba(40,167,69,0.25);
+        box-shadow: 0 0 0 0.2rem rgba(var(--rgb-primario), 0.25);
     }
 
     /* ====== RESPONSIVE ====== */
@@ -384,7 +402,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['enviar_contacto'])) {
         .contact-hero h1 { font-size: 2.2rem; }
         .contact-hero p { font-size: 1rem; }
         .form-container { padding: 30px 20px; }
-        .schedule-card, .map-container { margin-bottom: 30px; }
     }
 </style>
 
@@ -399,12 +416,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['enviar_contacto'])) {
             <?php if ($abierto_ahora): ?>
                 <span class="status-badge abierto">
                     <span class="status-dot abierto"></span>
-                    Abierto ahora
+                    Abierto (revisar los horarios de nuestras sucursales)
                 </span>
             <?php else: ?>
                 <span class="status-badge cerrado">
                     <span class="status-dot cerrado"></span>
-                    Cerrado ahora
+                    Cerrado ((revisar los horarios de nuestras sucursales))
                 </span>
             <?php endif; ?>
         </div>
@@ -469,23 +486,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['enviar_contacto'])) {
                         <i class="fas fa-map-marker-alt"></i>
                     </div>
                     <h5>Ubicación</h5>
-                    <a href="#mapa">Ver en mapa</a>
+                    <a href="#sucursales">Ver sucursales</a>
                 </div>
             </div>
         </div>
     </div>
 </section>
 
-<!-- ====== FORMULARIO + HORARIO ====== -->
+<!-- ====== FORMULARIO (AHORA A ANCHO COMPLETO) ====== -->
 <section class="form-section">
     <div class="container">
-        <div class="row g-5 align-items-stretch">
-            
-            <!-- FORMULARIO DE CONTACTO -->
-            <div class="col-lg-7" data-aos="fade-right">
-                <div class="form-container h-100">
-                    <h3><i class="fas fa-paper-plane text-success me-2"></i>Envíanos un mensaje</h3>
-                    <p class="text-muted mb-4">Completa el formulario y te responderemos a la brevedad.</p>
+        <div class="row justify-content-center">
+            <div class="col-lg-10" data-aos="fade-up">
+                <div class="form-container">
+                    <div class="text-center mb-4">
+                        <h3><i class="fas fa-paper-plane text-success me-2"></i>Envíanos un mensaje</h3>
+                        <p class="text-muted">Completa el formulario y te responderemos a la brevedad.</p>
+                    </div>
 
                     <?php if ($mensaje_enviado): ?>
                         <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -561,169 +578,159 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['enviar_contacto'])) {
                     </form>
                 </div>
             </div>
-
-            <!-- HORARIO -->
-            <div class="col-lg-5" data-aos="fade-left">
-                <div class="schedule-card">
-                    <h3 class="mb-4 text-center">
-                        <i class="fas fa-clock text-success me-2"></i>Horario de Atención
-                    </h3>
-
-                    <?php
-                    $dias_completos = [
-                        1 => ['nombre' => 'Lunes', 'campo' => 'horario_lunes'],
-                        2 => ['nombre' => 'Martes', 'campo' => 'horario_martes'],
-                        3 => ['nombre' => 'Miércoles', 'campo' => 'horario_miercoles'],
-                        4 => ['nombre' => 'Jueves', 'campo' => 'horario_jueves'],
-                        5 => ['nombre' => 'Viernes', 'campo' => 'horario_viernes'],
-                        6 => ['nombre' => 'Sábado', 'campo' => 'horario_sabado'],
-                        7 => ['nombre' => 'Domingo', 'campo' => 'horario_domingo']
-                    ];
-                    
-                    $dia_actual = (int)date('N');
-                    
-                    foreach ($dias_completos as $num => $info):
-                        $horario = $config[$info['campo']] ?? 'Cerrado';
-                        $es_hoy = ($num === $dia_actual);
-                        $es_cerrado = (strtolower($horario) === 'cerrado' || empty($horario));
-                        
-                        $clases = 'schedule-item';
-                        if ($es_hoy) $clases .= ' hoy';
-                        if ($es_cerrado) $clases .= ' cerrado-dia';
-                    ?>
-                        <div class="<?= $clases ?>">
-                            <span class="schedule-day">
-                                <?php if ($es_hoy): ?>
-                                    <i class="fas fa-calendar-check text-success me-2"></i>
-                                <?php endif; ?>
-                                <?= $info['nombre'] ?>
-                                <?php if ($es_hoy): ?>
-                                    <span class="badge bg-success ms-2">HOY</span>
-                                <?php endif; ?>
-                            </span>
-                            <span class="schedule-time">
-                                <?php if ($es_cerrado): ?>
-                                    <i class="fas fa-times-circle text-danger me-1"></i> Cerrado
-                                <?php else: ?>
-                                    <i class="fas fa-clock text-success me-1"></i> <?= htmlspecialchars($horario) ?>
-                                <?php endif; ?>
-                            </span>
-                        </div>
-                    <?php endforeach; ?>
-
-                    <hr class="my-4">
-
-                    <div class="text-center">
-                        <p class="mb-2 text-muted small">
-                            <i class="fas fa-info-circle me-1"></i>
-                            Los horarios pueden variar en días festivos
-                        </p>
-                        <?php if (!empty($config['whatsapp'])): ?>
-                            <a href="https://wa.me/52<?= preg_replace('/[^0-9]/', '', $config['whatsapp']) ?>" 
-                               target="_blank" 
-                               class="btn btn-success mt-2" 
-                               style="border-radius: 50px; padding: 10px 25px;">
-                                <i class="fab fa-whatsapp me-2"></i> Consultar disponibilidad
-                            </a>
-                        <?php endif; ?>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 </section>
 
-<!-- ====== MAPA ====== -->
-<section class="py-5" id="mapa">
+<!-- ====== SUCURSALES (CON ESTADO ABIERTO/CERRADO) ====== -->
+<section class="py-5" id="sucursales" style="background: #f8f9fa;">
     <div class="container">
         <div class="text-center mb-5" data-aos="fade-up">
             <h2 class="fw-bold" style="color: #2c3e50;">
-                <i class="fas fa-map-marked-alt text-success me-2"></i>Encuéntranos
+                <i class="fas fa-map-marked-alt text-success me-2"></i>Nuestras Sucursales
             </h2>
-            <p class="text-muted">Visítanos en nuestras instalaciones</p>
+            <p class="text-muted">Visítanos o contáctanos en cualquiera de nuestras ubicaciones</p>
         </div>
 
-        <div class="row g-4 align-items-stretch">
-            <div class="col-lg-8" data-aos="fade-right">
-                <div class="map-container">
-                    <?php if (!empty($config['google_maps'])): ?>
-                        <?= $config['google_maps'] ?>
-                    <?php else: ?>
-                        <div class="d-flex align-items-center justify-content-center h-100 bg-light">
-                            <div class="text-center text-muted p-5">
-                                <i class="fas fa-map-marked-alt fa-4x mb-3"></i>
-                                <h5>Ubicación no configurada</h5>
-                                <p>El administrador debe configurar el mapa desde el panel de control.</p>
+        <?php
+        $stmt_suc = $pdo->query("
+            SELECT * FROM sucursales 
+            WHERE activo = 1 
+            ORDER BY es_principal DESC, orden ASC
+        ");
+        $sucursales = $stmt_suc->fetchAll(PDO::FETCH_ASSOC);
+        ?>
+
+        <?php if (empty($sucursales)): ?>
+            <div class="text-center py-5 bg-white rounded-3 shadow-sm" data-aos="fade-up">
+                <i class="fas fa-store-slash fa-4x text-muted mb-3"></i>
+                <h3 class="text-muted">No hay sucursales registradas en este momento</h3>
+                <p class="text-muted">Estamos actualizando nuestra información. ¡Vuelve pronto!</p>
+            </div>
+        <?php else: ?>
+            <div class="row g-4">
+                <?php foreach ($sucursales as $s): 
+                    $tel_limpio = preg_replace('/[^0-9+]/', '', $s['telefono']);
+                    $wa_limpio = preg_replace('/[^0-9]/', '', $s['whatsapp']);
+                    $wa_link = !empty($wa_limpio) ? "https://wa.me/52{$wa_limpio}" : (!empty($tel_limpio) ? "https://wa.me/52{$tel_limpio}" : "#");
+                    
+                    // Decodificar el horario semanal
+                    $horarios = json_decode($s['horarios_semanales'] ?? '{}', true) ?: [];
+                    $dias_semana = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+                    
+                    // Verificar si esta sucursal está abierta ahora
+                    $sucursal_abierta = sucursalAbiertaAhora($s['horarios_semanales']);
+                    $dia_actual_num = (int)date('N');
+
+                ?>
+
+
+                    <div class="col-md-6 col-lg-4" data-aos="fade-up">
+                        <div class="card h-100 border-0 shadow-sm sucursal-card" style="border-radius: 15px; overflow: hidden;">
+                            
+                            <!-- BADGE DE ESTADO (ABIERTO/CERRADO) -->
+                            <?php if ($sucursal_abierta): ?>
+                                <span class="sucursal-status-badge abierta">
+                                    <span class="status-dot-mini"></span>
+                                    Abierto ahora
+                                </span>
+                            <?php else: ?>
+                                <span class="sucursal-status-badge cerrada">
+                                    <span class="status-dot-mini"></span>
+                                    Cerrado ahora
+                                </span>
+                            <?php endif; ?>
+
+                            <div class="card-body d-flex flex-column p-4">
+                                
+                                <!-- Encabezado -->
+                                <div class="d-flex justify-content-between align-items-start mb-3" style="padding-right: 110px;">
+                                    <h4 class="card-title fw-bold mb-0 text-dark" style="font-size: 1.2rem;">
+                                        <i class="fas fa-store text-success me-2"></i>
+                                        <?= htmlspecialchars($s['nombre']) ?>
+                                    </h4>
+                                    <?php if ($s['es_principal']): ?>
+                                        <span class="badge bg-warning text-dark" style="font-size: 0.7rem;">Principal</span>
+                                    <?php endif; ?>
+                                </div>
+
+                                <!-- Dirección -->
+                                <div class="mb-3">
+                                    <p class="mb-1 text-muted small text-uppercase fw-bold" style="letter-spacing: 1px; font-size: 0.75rem;">Dirección</p>
+                                    <p class="mb-0 text-dark" style="font-size: 0.9rem;">
+                                        <i class="fas fa-map-marker-alt text-danger me-2"></i>
+                                        <?= nl2br(htmlspecialchars($s['direccion'])) ?>
+                                    </p>
+                                </div>
+
+                                <!-- Horario Semanal CON DÍA ACTUAL RESALTADO -->
+                                <div class="mb-3 bg-light p-3 rounded">
+                                    <p class="mb-2 text-muted small text-uppercase fw-bold" style="letter-spacing: 1px; font-size: 0.75rem;">
+                                        <i class="fas fa-clock text-warning me-1"></i> Horario
+                                    </p>
+                                    <div class="horarios-lista">
+                                        <?php foreach ($dias_semana as $index => $dia): 
+                                            $hora = trim($horarios[$dia] ?? 'Cerrado');
+                                            $es_cerrado = (strtolower($hora) === 'cerrado' || empty($hora));
+                                            $es_hoy = (($index + 1) === $dia_actual_num);
+                                        ?>
+                                            <div class="horario-item <?= $es_hoy ? 'hoy' : '' ?>">
+                                                <span class="horario-dia">
+                                                    <?= $dia ?>
+                                                    <?php if ($es_hoy): ?>
+                                                        <small class="text-muted">(Hoy)</small>
+                                                    <?php endif; ?>
+                                                </span>
+                                                <span class="<?= $es_cerrado ? 'horario-cerrado' : 'horario-hora' ?>">
+                                                    <?= $es_cerrado ? 'Cerrado' : htmlspecialchars($hora) ?>
+                                                </span>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                </div>
+
+                                <!-- Contacto -->
+                                <div class="mb-3">
+                                    <?php if (!empty($s['telefono'])): ?>
+                                        <p class="mb-2" style="font-size: 0.9rem;">
+                                            <i class="fas fa-phone text-success me-2"></i>
+                                            <a href="tel:<?= $tel_limpio ?>" class="text-decoration-none text-dark fw-medium"><?= htmlspecialchars($s['telefono']) ?></a>
+                                        </p>
+                                    <?php endif; ?>
+                                    
+                                    <?php if (!empty($s['whatsapp'])): ?>
+                                        <p class="mb-0" style="font-size: 0.9rem;">
+                                            <i class="fab fa-whatsapp text-success me-2"></i>
+                                            <a href="<?= $wa_link ?>" target="_blank" class="text-decoration-none text-success fw-medium"><?= htmlspecialchars($s['whatsapp']) ?></a>
+                                        </p>
+                                    <?php endif; ?>
+                                </div>
+
+                                <!-- Separador visual -->
+                                <hr class="my-3">
+
+                                <!-- Mapa o Botón de respaldo -->
+                                <div class="mt-auto">
+                                    <?php if (!empty($s['google_maps'])): ?>
+                                        <div class="ratio ratio-16x9 rounded overflow-hidden border">
+                                            <?= $s['google_maps'] ?>
+                                        </div>
+                                    <?php else: ?>
+                                        <a href="https://www.google.com/maps/search/?api=1&query=<?= urlencode($s['direccion']) ?>" 
+                                           target="_blank" 
+                                           class="btn btn-outline-success w-100 btn-sm" 
+                                           style="border-radius: 50px; padding: 10px; font-size: 0.85rem;">
+                                            <i class="fas fa-directions me-2"></i> Ver en Google Maps
+                                        </a>
+                                    <?php endif; ?>
+                                </div>
+
                             </div>
                         </div>
-                    <?php endif; ?>
-                </div>
-            </div>
-
-            <div class="col-lg-4" data-aos="fade-left">
-                <div class="card border-0 shadow-sm h-100" style="border-radius: 20px;">
-                    <div class="card-body p-4">
-                        <h4 class="fw-bold mb-4">
-                            <i class="fas fa-building text-success me-2"></i><?= htmlspecialchars($config['empresa']) ?>
-                        </h4>
-
-                        <div class="mb-4">
-                            <h6 class="text-muted text-uppercase small mb-2">
-                                <i class="fas fa-map-pin me-1"></i> Dirección
-                            </h6>
-                            <p class="mb-0">
-                                <?= nl2br(htmlspecialchars($config['direccion'] ?? 'No especificada')) ?>
-                            </p>
-                        </div>
-
-                        <div class="mb-4">
-                            <h6 class="text-muted text-uppercase small mb-2">
-                                <i class="fas fa-phone me-1"></i> Teléfonos
-                            </h6>
-                            <?php if (!empty($config['telefono'])): ?>
-                                <p class="mb-1">
-                                    <a href="tel:<?= preg_replace('/[^0-9+]/', '', $config['telefono']) ?>" 
-                                       class="text-decoration-none">
-                                        <?= htmlspecialchars($config['telefono']) ?>
-                                    </a>
-                                </p>
-                            <?php endif; ?>
-                            <?php if (!empty($config['whatsapp'])): ?>
-                                <p class="mb-0">
-                                    <a href="https://wa.me/52<?= preg_replace('/[^0-9]/', '', $config['whatsapp']) ?>" 
-                                       target="_blank"
-                                       class="text-decoration-none text-success">
-                                        <i class="fab fa-whatsapp me-1"></i>
-                                        <?= htmlspecialchars($config['whatsapp']) ?>
-                                    </a>
-                                </p>
-                            <?php endif; ?>
-                        </div>
-
-                        <div class="mb-4">
-                            <h6 class="text-muted text-uppercase small mb-2">
-                                <i class="fas fa-envelope me-1"></i> Correo
-                            </h6>
-                            <p class="mb-0">
-                                <a href="mailto:<?= htmlspecialchars($config['correo'] ?? '') ?>" 
-                                   class="text-decoration-none">
-                                    <?= htmlspecialchars($config['correo'] ?? 'No especificado') ?>
-                                </a>
-                            </p>
-                        </div>
-
-                        <?php if (!empty($config['direccion'])): ?>
-                            <a href="https://www.google.com/maps/search/?api=1&query=<?= urlencode($config['direccion']) ?>" 
-                               target="_blank" 
-                               class="btn btn-outline-success w-100 mt-3" 
-                               style="border-radius: 50px;">
-                                <i class="fas fa-directions me-2"></i> Cómo llegar
-                            </a>
-                        <?php endif; ?>
                     </div>
-                </div>
+                <?php endforeach; ?>
             </div>
-        </div>
+        <?php endif; ?>
     </div>
 </section>
 
@@ -844,7 +851,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['enviar_contacto'])) {
 </section>
 
 <!-- ====== CTA FINAL ====== -->
-<section class="py-5" style="background: linear-gradient(135deg, #28a745, #20c997); color: white;">
+<section class="py-5" style="background: linear-gradient(135deg, var(--color-primario), var(--color-secundario)); color: white;">
     <div class="container text-center" data-aos="zoom-in">
         <h2 class="fw-bold mb-3">¿Listo para comenzar tu proyecto?</h2>
         <p class="lead mb-4 opacity-90">Contáctanos hoy y recibe asesoría personalizada sin compromiso</p>

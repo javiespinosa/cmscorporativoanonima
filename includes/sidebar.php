@@ -132,7 +132,18 @@ class="nav-link">
         <p>Promociones</p>
     </a>
 </li>
-
+<li class="nav-item">
+    <a href="<?= BASE_URL ?>admin/causas/index.php" class="nav-link">
+        <i class="nav-icon fas fa-heart text-danger"></i>
+        <p>Causas Sociales</p>
+    </a>
+</li>
+<li class="nav-item">
+    <a href="<?= BASE_URL ?>admin/sucursales/index.php" class="nav-link">
+        <i class="nav-icon fas fa-store text-primary"></i>
+        <p>Sucursales</p>
+    </a>
+</li>
                 <li class="nav-item">
 
                     <a href="<?= BASE_URL ?>logout.php" class="nav-link">

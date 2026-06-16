@@ -5,6 +5,13 @@ include 'includes/web_menu.php';
 // Cargar conexión a Sativa
 require_once 'config/database_sativa.php';
 
+// Función auxiliar para construir URL de imagen
+function getUrlImagen($path) {
+    if (empty($path)) return '';
+    if (strpos($path, 'http') === 0 || strpos($path, '//') === 0) return $path;
+    return (defined('BASE_URL') ? BASE_URL : '/') . ltrim($path, '/');
+}
+
 // Obtener productos activos y no eliminados de Sativa
 $productos = $pdo_sativa->query("
     SELECT 
@@ -38,7 +45,7 @@ $totalProductos = count($productos);
     }
     .producto-card:hover {
         transform: translateY(-10px);
-        box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+        box-shadow: 0 15px 40px rgba(var(--rgb-primario), 0.15);
     }
     .producto-img-wrapper {
         position: relative;
@@ -52,7 +59,7 @@ $totalProductos = count($productos);
     .producto-img-wrapper img {
         width: 100%;
         height: 100%;
-        object-fit: contain; /* contain para que se vea completo el producto */
+        object-fit: contain;
         transition: transform 0.6s ease;
         padding: 10px;
     }
@@ -68,7 +75,7 @@ $totalProductos = count($productos);
     .producto-precio {
         font-size: 1.4rem;
         font-weight: 800;
-        color: #28a745;
+        color: var(--color-primario);
         margin-bottom: 10px;
     }
     .producto-codigo {
@@ -111,12 +118,11 @@ $totalProductos = count($productos);
                         <a href="producto.php?id=<?= $p['id'] ?>" class="text-decoration-none">
                             <div class="producto-img-wrapper">
                                 <?php if (!empty($p['imagen_principal'])): ?>
-                                    <!-- NOTA: Ajusta la ruta si Path1 no es una URL completa -->
-                                    <img src="<?= htmlspecialchars($p['imagen_principal']) ?>" 
+                                    <img src="<?= htmlspecialchars(getUrlImagen($p['imagen_principal'])) ?>" 
                                          alt="<?= htmlspecialchars($p['Descripcion']) ?>"
-                                         onerror="this.src='https://via.placeholder.com/300x300?text=Sin+Imagen'">
+                                         onerror="this.src='https://placehold.co/300x300/e9ecef/6c757d?text=Sin+Imagen'">
                                 <?php else: ?>
-                                    <img src="https://via.placeholder.com/300x300?text=Sin+Imagen" alt="Sin imagen">
+                                    <img src="https://placehold.co/300x300/e9ecef/6c757d?text=Sin+Imagen" alt="Sin imagen">
                                 <?php endif; ?>
                             </div>
                         </a>
